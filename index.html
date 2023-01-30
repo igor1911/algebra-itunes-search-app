@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>iTunes search App</title>
+    <style>
+        .show {
+            display: block;
+        }
+
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="main" class="">
+    <div id="header" class="">
+        <h1>iTunes search</h1>
+        <label for="itunes-search">Start searching for music styles!</label><br>
+        <input id="itunes-search" type="text" placeholder="Heavy metal">
+    </div>
+
+    <div id="content" class="">
+        <img id="spinner" class="hide" src="assets/spinner.gif" width="64" alt="Loading...">
+        <p id="error-message"></p>
+        <h2 id="artist"></h2>
+        <ul id="items">
+        </ul>
+    </div>
+</div>
+
+<script>
+    let typingTimer;
+    const doneTypingInterval = 3000;
+
+    const artist = document.getElementById('artist');
+    const errorMessage = document.getElementById('error-message');
+    const spinner = document.getElementById('spinner');
+    const itunesSearchTerm = document.getElementById('itunes-search');
+    const itunesSearchResults = document.getElementById('items');
+
+    itunesSearchTerm.addEventListener('keyup', () => {
+
+        spinner.classList.remove('hide');
+        spinner.classList.add('show');
+
+        artist.innerHTML = '';
+        errorMessage.innerHTML = '';
+        itunesSearchResults.innerHTML = '';
+
+        clearTimeout(typingTimer);
+        if (itunesSearchTerm.value) {
+            typingTimer = setTimeout(doneTyping, doneTypingInterval);
+        } else {
+            artist.innerHTML = '';
+            errorMessage.innerHTML = '';
+            itunesSearchResults.innerHTML = '';
+
+            spinner.classList.remove('show');
+            spinner.classList.add('hide');
+        }
+    });
+
+    const doneTyping = () => {
+        errorMessage.innerHTML = '';
+        artist.innerHTML = '';
+        itunesSearchResults.innerHTML = '';
+
+        spinner.classList.remove('show');
+        spinner.classList.add('hide');
+
+        if (itunesSearchTerm.value.length >= 3) {
+
+            const url = `https://itunes.apple.com/search?term=${itunesSearchTerm.value}&entity=song`;
+
+            const request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.onload = () => {
+                if (request.status === 200) {
+                    const response = JSON.parse(request.response);
+                    const results = response.results;
+
+                    if (results.length > 0) {
+                        results.map((element) => {
+                            artist.innerHTML = 'Artist: ' + element.artistName;
+
+                            const newItunesSearchItem = document.createElement('li');
+                            newItunesSearchItem.innerText = element.trackName;
+                            itunesSearchResults.append(newItunesSearchItem);
+                        });
+                    } else {
+                        errorMessage.innerHTML = 'There are no results to show.';
+                    }
+                } else {
+                    errorMessage.innerHTML = 'Something went wrong!';
+                }
+            }
+
+            request.send();
+        } else {
+            errorMessage.innerHTML = 'Input is not long enough!';
+        }
+    }
+</script>
+
+</body>
+</html>
